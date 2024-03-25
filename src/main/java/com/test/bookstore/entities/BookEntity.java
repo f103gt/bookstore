@@ -1,20 +1,20 @@
-package com.test.bookstore.models;
+package com.test.bookstore.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
 @Table(name = "book")
-public class BookModel {
+public class BookEntity {
     @Id
-    private String id;
+    private UUID id;
     private String title;
     private String author;
     private String isbn;

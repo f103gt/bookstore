@@ -48,9 +48,10 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation "io.projectreactor:reactor-core:${reactorVersion}"
     implementation "net.devh:grpc-server-spring-boot-starter:${grpcSpringBootVersion}"
+
     implementation "com.salesforce.servicelibs:reactor-grpc-stub:${reactiveGrpcVersion}"
     implementation "org.mapstruct:mapstruct:${mapstructVerion}"
 
@@ -58,11 +59,22 @@ dependencies {
     compileOnly "jakarta.annotation:jakarta.annotation-api:${jakartaAnnotationVersion}"
 
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql'
 
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVerion}"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
+    // Citrus Framework dependencies
+    testImplementation 'org.citrusframework:citrus-base:4.1.1'
+    testImplementation 'org.citrusframework:citrus-spring:4.1.1'
+
+    // Testcontainers for PostgreSQL
+    testImplementation 'org.testcontainers:postgresql:1.19.7'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 protobuf {
@@ -90,3 +102,9 @@ protobuf {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+
+//    testImplementation 'com.consol.citrus:citrus-java-dsl:3.2.0'
+//    testImplementation 'com.consol.citrus:citrus-grpc:3.2.0'
+//    testImplementation 'com.consol.citrus:citrus-core:3.2.0'
+//    testImplementation 'com.consol.citrus:citrus-spring:3.2.0'

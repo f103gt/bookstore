@@ -5,6 +5,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# bfg-report
+.git.bfg-report
+
 ### STS ###
 .apt_generated
 .classpath
@@ -13,7 +16,7 @@ build/
 .settings
 .springBeans
 .sts4-cache
-env
+.env
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
