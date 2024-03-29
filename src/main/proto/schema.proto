@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 option java_multiple_files = true;
 
 package com.test.bookstore;
@@ -12,10 +14,25 @@ message Book{
   int32 quantity = 5;
 }
 
+message NewBookRequest{
+  string title = 2;
+  string author = 3;
+  string isbn = 4;
+  int32 quantity = 5;
+}
+
+message BookIDRequest{
+  string id = 1;
+}
+
+message BookAuthorRequest{
+  string author = 1;
+}
+
 service BookService{
-  rpc CreateBook(Book) returns(Book){}
+  rpc CreateBook(NewBookRequest) returns(Book){}
   rpc UpdateBook(Book) returns(Book){}
-  rpc GetBookById(Book) returns(Book){}
-  rpc GetBookByTitle(Book) returns(stream Book){}
-  rpc DeleteBookById(Book) returns(Book){}
+  rpc GetBookById(BookIDRequest) returns(Book){}
+  rpc GetBooksByAuthor(BookAuthorRequest) returns(stream Book){}
+  rpc DeleteBookById(BookIDRequest) returns(google.protobuf.Empty){}
 }

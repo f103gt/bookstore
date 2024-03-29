@@ -1,10 +1,10 @@
-
 spring:
   application:
     name: bookstore
   r2dbc:
-    url: r2dbc:postgresql://localhost:15432/bookstore
-    username: bookstore
-    password: password
-server:
-  port: 8080
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+grpc:
+  server:
+    port: 9090

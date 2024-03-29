@@ -1,53 +1,61 @@
-package com.test.bookstore.services;
+package com.test.bookstore.configurations;
 
-import com.test.bookstore.Book;
 import com.test.bookstore.ReactorBookServiceGrpc;
 import com.test.bookstore.dtos.BookMapper;
 import com.test.bookstore.repositories.BookRepository;
+import com.test.bookstore.services.BookService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
 @SpringBootTest
 @Testcontainers
-class BookServiceTest  {
-
+@Configuration
+public class BookServiceIntegrationTestConfig {
     private Server server;
     @Autowired
-    private BookRepository repository;
+    protected BookRepository repository;
+
     @Autowired
-    private BookMapper bookMapper;
+    protected BookMapper bookMapper;
+
+    @Autowired
+    private DatabaseClient databaseClient;
 
     private ManagedChannel channel;
-    @Autowired
-    private BookService service;
+
+    protected ReactorBookServiceGrpc.ReactorBookServiceStub stub;
 
     @BeforeEach
     public void startServerAndClient() throws IOException {
         // Initialize and start your server
-        server = ServerBuilder.forPort(8080)
+        server = ServerBuilder.forPort(8081)
                 .addService(new BookService(repository, bookMapper))
                 .build()
                 .start();
 
         // Initialize your channel
         channel = ManagedChannelBuilder
-                .forAddress("localhost", 8080)
+                .forAddress("localhost", 8081)
                 .usePlaintext()
                 .build();
+        stub = ReactorBookServiceGrpc.newReactorStub(channel);
+
     }
 
     @AfterEach
@@ -57,45 +65,26 @@ class BookServiceTest  {
         channel.shutdown();
     }
 
+
     @Container
     private static final PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.1"));
+            new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine"));
 
     //TODO EXTRACT INTO APPLICATION YAML
     @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry){
+    static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.r2dbc.url", () -> "r2dbc:postgresql://"
                 + postgreSQLContainer.getHost() + ":"
                 + postgreSQLContainer.getMappedPort(5432) + "/"
                 + postgreSQLContainer.getDatabaseName());
-        registry.add("spring.r2dbc.username",postgreSQLContainer::getUsername);
-        registry.add("spring.r2dbc.password",postgreSQLContainer::getPassword);
-        registry.add("spring.r2dbc.initialization-mode",()->"always");
+        registry.add("spring.r2dbc.username", postgreSQLContainer::getUsername);
+        registry.add("spring.r2dbc.password", postgreSQLContainer::getPassword);
+        registry.add("spring.r2dbc.initialization-mode", () -> "always");
     }
 
-    @Test
-    public void testBookCreation(){
-        ReactorBookServiceGrpc.ReactorBookServiceStub stub =
-                ReactorBookServiceGrpc.newReactorStub(channel);
-
-        Book request = Book.newBuilder()
-                .setTitle("The Hitchhiker's Guide to the Galaxy")
-                .setAuthor("Douglas Adams")
-                .setIsbn("1234567890")
-                .setQuantity(10)
-                .build();
-
-        // Call your BookService using the test client
-        Mono<Book> responseMono = service.createBook(request);
-        Book response = responseMono.block();
-        assert response != null;
-        Assertions.assertNotNull(response.getId());
-        Assertions.assertEquals(request.getTitle(), response.getTitle());
-        Assertions.assertEquals(request.getAuthor(), response.getAuthor());
-        Assertions.assertEquals(request.getIsbn(), response.getIsbn());
-        Assertions.assertEquals(request.getQuantity(), response.getQuantity());
+    @AfterEach
+    public void cleanDatabase() {
+        // Clean up data in the table after each test
+        databaseClient.sql("TRUNCATE TABLE book").fetch().rowsUpdated().block();
     }
-
-
 }
-

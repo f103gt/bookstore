@@ -1,4 +1,4 @@
-package com.test.bookstore.config;
+package com.test.bookstore.configurations;
 
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.context.annotation.Bean;
